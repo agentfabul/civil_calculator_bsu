@@ -1,0 +1,199 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global safety net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidUnitSystem(u) {
+      return u in ['SI', 'US'];
+    }
+
+    function isValidStandardFamily(s) {
+      return s in ['ACI_ASCE', 'EUROCODE'];
+    }
+
+    function isValidCalcStatus(st) {
+      return st in ['PASS', 'FAIL', 'ESTIMATE', 'WARNING'];
+    }
+
+    function isValidTimestamp(ts) {
+      return ts is timestamp && ts <= request.time;
+    }
+
+    function isValidUserProfile(data, userId) {
+      return data.userId == userId &&
+             data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 100 &&
+             (!('email' in data) || (data.email is string && data.email.size() <= 120)) &&
+             (!('organization' in data) || (data.organization is string && data.organization.size() <= 120)) &&
+             (!('licenseOrTitle' in data) || (data.licenseOrTitle is string && data.licenseOrTitle.size() <= 80)) &&
+             isValidUnitSystem(data.preferredUnitSystem) &&
+             isValidStandardFamily(data.preferredStandard);
+    }
+
+    function isValidProject(data, userId) {
+      return data.userId == userId &&
+             data.name is string && data.name.size() >= 1 && data.name.size() <= 120 &&
+             (!('clientName' in data) || (data.clientName is string && data.clientName.size() <= 120)) &&
+             (!('location' in data) || (data.location is string && data.location.size() <= 120)) &&
+             (!('notes' in data) || (data.notes is string && data.notes.size() <= 1000)) &&
+             isValidUnitSystem(data.defaultUnitSystem) &&
+             isValidStandardFamily(data.defaultStandard) &&
+             data.calculationCount is int && data.calculationCount >= 0 && data.calculationCount <= 10000;
+    }
+
+    function isValidSavedCalculation(data, userId, projectId) {
+      return data.userId == userId &&
+             data.projectId == projectId &&
+             data.moduleId is string && data.moduleId.size() >= 1 && data.moduleId.size() <= 64 &&
+             data.title is string && data.title.size() >= 1 && data.title.size() <= 140 &&
+             isValidUnitSystem(data.unitSystem) &&
+             data.standardId is string && data.standardId.size() >= 1 && data.standardId.size() <= 64 &&
+             data.latestRevisionNumber is int && data.latestRevisionNumber >= 1 && data.latestRevisionNumber <= 10000 &&
+             isValidCalcStatus(data.latestStatus) &&
+             data.latestSummary is string && data.latestSummary.size() <= 300 &&
+             (!('latestUtilization' in data) || (data.latestUtilization is number && data.latestUtilization >= 0 && data.latestUtilization <= 10000)) &&
+             data.latestInputs is map && data.latestInputs.keys().size() <= 30 &&
+             data.latestAssumptions is map && data.latestAssumptions.keys().size() <= 20 &&
+             (!('latestNotes' in data) || (data.latestNotes is string && data.latestNotes.size() <= 1000));
+    }
+
+    function isValidRevision(data, userId, projectId, calcId) {
+      return data.userId == userId &&
+             data.projectId == projectId &&
+             data.calcId == calcId &&
+             data.revisionNumber is int && data.revisionNumber >= 1 && data.revisionNumber <= 10000 &&
+             (!('revisionNote' in data) || (data.revisionNote is string && data.revisionNote.size() <= 500)) &&
+             data.moduleId is string && data.moduleId.size() >= 1 && data.moduleId.size() <= 64 &&
+             data.title is string && data.title.size() >= 1 && data.title.size() <= 140 &&
+             isValidUnitSystem(data.unitSystem) &&
+             data.standardId is string && data.standardId.size() >= 1 && data.standardId.size() <= 64 &&
+             data.standardLabel is string && data.standardLabel.size() >= 1 && data.standardLabel.size() <= 120 &&
+             isValidCalcStatus(data.status) &&
+             data.governingCheck is string && data.governingCheck.size() <= 200 &&
+             (!('utilizationRatio' in data) || (data.utilizationRatio is number && data.utilizationRatio >= 0 && data.utilizationRatio <= 10000)) &&
+             data.inputs is map && data.inputs.keys().size() <= 30 &&
+             data.assumptions is map && data.assumptions.keys().size() <= 20 &&
+             data.primaryOutputs is list && data.primaryOutputs.size() <= 20 &&
+             (data.primaryOutputs.size() == 0 || data.primaryOutputs[0] is string) &&
+             data.warnings is list && data.warnings.size() <= 20 &&
+             (data.warnings.size() == 0 || data.warnings[0] is string) &&
+             data.softwareVersion is string && data.softwareVersion.size() >= 1 && data.softwareVersion.size() <= 32;
+    }
+
+    match /users/{userId} {
+      allow get: if isOwner(userId) && isValidId(userId);
+      allow list: if false;
+
+      allow create: if isOwner(userId) &&
+                       isValidId(userId) &&
+                       incoming().keys().hasAll(['userId', 'displayName', 'preferredUnitSystem', 'preferredStandard', 'createdAt', 'updatedAt']) &&
+                       incoming().keys().hasOnly(['userId', 'displayName', 'email', 'organization', 'licenseOrTitle', 'preferredUnitSystem', 'preferredStandard', 'createdAt', 'updatedAt']) &&
+                       isValidTimestamp(incoming().createdAt) &&
+                       isValidTimestamp(incoming().updatedAt) &&
+                       isValidUserProfile(incoming(), userId);
+
+      allow update: if isOwner(userId) &&
+                       isValidId(userId) &&
+                       isValidUserProfile(incoming(), userId) &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt &&
+                       isValidTimestamp(incoming().updatedAt) &&
+                       incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'email', 'organization', 'licenseOrTitle', 'preferredUnitSystem', 'preferredStandard', 'updatedAt']);
+
+      allow delete: if isOwner(userId) && isValidId(userId);
+
+      match /projects/{projectId} {
+        allow get: if isOwner(userId) && isValidId(projectId);
+        allow list: if isOwner(userId);
+
+        allow create: if isOwner(userId) &&
+                         isValidId(projectId) &&
+                         incoming().keys().hasAll(['userId', 'name', 'defaultUnitSystem', 'defaultStandard', 'calculationCount', 'createdAt', 'updatedAt']) &&
+                         incoming().keys().hasOnly(['userId', 'name', 'clientName', 'location', 'notes', 'defaultUnitSystem', 'defaultStandard', 'calculationCount', 'createdAt', 'updatedAt']) &&
+                         isValidTimestamp(incoming().createdAt) &&
+                         isValidTimestamp(incoming().updatedAt) &&
+                         isValidProject(incoming(), userId);
+
+        allow update: if isOwner(userId) &&
+                         isValidId(projectId) &&
+                         isValidProject(incoming(), userId) &&
+                         incoming().userId == existing().userId &&
+                         incoming().createdAt == existing().createdAt &&
+                         isValidTimestamp(incoming().updatedAt) &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['name', 'clientName', 'location', 'notes', 'defaultUnitSystem', 'defaultStandard', 'calculationCount', 'updatedAt']);
+
+        allow delete: if isOwner(userId) && isValidId(projectId);
+
+        match /calculations/{calcId} {
+          allow get: if isOwner(userId) && isValidId(projectId) && isValidId(calcId);
+          allow list: if isOwner(userId) && isValidId(projectId);
+
+          allow create: if isOwner(userId) &&
+                           isValidId(projectId) &&
+                           isValidId(calcId) &&
+                           exists(/databases/$(database)/documents/users/$(userId)/projects/$(projectId)) &&
+                           incoming().keys().hasAll(['userId', 'projectId', 'moduleId', 'title', 'unitSystem', 'standardId', 'latestRevisionNumber', 'latestStatus', 'latestSummary', 'latestInputs', 'latestAssumptions', 'createdAt', 'updatedAt']) &&
+                           incoming().keys().hasOnly(['userId', 'projectId', 'moduleId', 'title', 'unitSystem', 'standardId', 'latestRevisionNumber', 'latestStatus', 'latestSummary', 'latestUtilization', 'latestInputs', 'latestAssumptions', 'latestNotes', 'createdAt', 'updatedAt']) &&
+                           isValidTimestamp(incoming().createdAt) &&
+                           isValidTimestamp(incoming().updatedAt) &&
+                           isValidSavedCalculation(incoming(), userId, projectId);
+
+          allow update: if isOwner(userId) &&
+                           isValidId(projectId) &&
+                           isValidId(calcId) &&
+                           isValidSavedCalculation(incoming(), userId, projectId) &&
+                           incoming().userId == existing().userId &&
+                           incoming().projectId == existing().projectId &&
+                           incoming().moduleId == existing().moduleId &&
+                           incoming().createdAt == existing().createdAt &&
+                           isValidTimestamp(incoming().updatedAt) &&
+                           incoming().diff(existing()).affectedKeys().hasOnly(['title', 'unitSystem', 'standardId', 'latestRevisionNumber', 'latestStatus', 'latestSummary', 'latestUtilization', 'latestInputs', 'latestAssumptions', 'latestNotes', 'updatedAt']);
+
+          allow delete: if isOwner(userId) && isValidId(projectId) && isValidId(calcId);
+
+          match /revisions/{revisionId} {
+            allow get: if isOwner(userId) && isValidId(projectId) && isValidId(calcId) && isValidId(revisionId);
+            allow list: if isOwner(userId) && isValidId(projectId) && isValidId(calcId);
+
+            allow create: if isOwner(userId) &&
+                             isValidId(projectId) &&
+                             isValidId(calcId) &&
+                             isValidId(revisionId) &&
+                             exists(/databases/$(database)/documents/users/$(userId)/projects/$(projectId)/calculations/$(calcId)) &&
+                             incoming().keys().hasAll(['userId', 'projectId', 'calcId', 'revisionNumber', 'moduleId', 'title', 'unitSystem', 'standardId', 'standardLabel', 'status', 'governingCheck', 'inputs', 'assumptions', 'primaryOutputs', 'warnings', 'softwareVersion', 'createdAt']) &&
+                             incoming().keys().hasOnly(['userId', 'projectId', 'calcId', 'revisionNumber', 'revisionNote', 'moduleId', 'title', 'unitSystem', 'standardId', 'standardLabel', 'status', 'governingCheck', 'utilizationRatio', 'inputs', 'assumptions', 'primaryOutputs', 'warnings', 'softwareVersion', 'createdAt']) &&
+                             isValidTimestamp(incoming().createdAt) &&
+                             isValidRevision(incoming(), userId, projectId, calcId);
+
+            // Revisions are immutable audit snapshots
+            allow update: if false;
+
+            allow delete: if isOwner(userId) && isValidId(projectId) && isValidId(calcId) && isValidId(revisionId);
+          }
+        }
+      }
+    }
+  }
+}

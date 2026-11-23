@@ -1,0 +1,242 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Registered engineer or construction team member profile and unit/code preferences.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Authenticated Firebase UID matching the document path."
+        },
+        "displayName": {
+          "type": "string",
+          "description": "Display name shown in calculation reports and workspace header."
+        },
+        "email": {
+          "type": "string",
+          "description": "User email address from Google Sign-In."
+        },
+        "organization": {
+          "type": "string",
+          "description": "Optional engineering firm, university, or contractor organization."
+        },
+        "licenseOrTitle": {
+          "type": "string",
+          "description": "Optional role or credential note (e.g. Structural EIT, PE, Field Engineer)."
+        },
+        "preferredUnitSystem": {
+          "type": "string",
+          "enum": ["SI", "US"],
+          "description": "Default unit system."
+        },
+        "preferredStandard": {
+          "type": "string",
+          "enum": ["ACI_ASCE", "EUROCODE"],
+          "description": "Default design code family."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp set via FieldValue.serverTimestamp()."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp set via FieldValue.serverTimestamp()."
+        }
+      },
+      "required": ["userId", "displayName", "preferredUnitSystem", "preferredStandard", "createdAt", "updatedAt"]
+    },
+    "EngineeringProject": {
+      "title": "EngineeringProject",
+      "description": "Civil engineering project workspace organizing saved calculations and revisions.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Owner Firebase UID."
+        },
+        "name": {
+          "type": "string",
+          "description": "Project title."
+        },
+        "clientName": {
+          "type": "string",
+          "description": "Client or site reference."
+        },
+        "location": {
+          "type": "string",
+          "description": "Project site location."
+        },
+        "notes": {
+          "type": "string",
+          "description": "Project scope and engineering assumptions notes."
+        },
+        "defaultUnitSystem": {
+          "type": "string",
+          "enum": ["SI", "US"]
+        },
+        "defaultStandard": {
+          "type": "string",
+          "enum": ["ACI_ASCE", "EUROCODE"]
+        },
+        "calculationCount": {
+          "type": "integer"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["userId", "name", "defaultUnitSystem", "defaultStandard", "calculationCount", "createdAt", "updatedAt"]
+    },
+    "SavedCalculation": {
+      "title": "SavedCalculation",
+      "description": "Saved engineering calculation record within a project, tracking latest revision summary.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string"
+        },
+        "projectId": {
+          "type": "string"
+        },
+        "moduleId": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "unitSystem": {
+          "type": "string",
+          "enum": ["SI", "US"]
+        },
+        "standardId": {
+          "type": "string"
+        },
+        "latestRevisionNumber": {
+          "type": "integer"
+        },
+        "latestStatus": {
+          "type": "string",
+          "enum": ["PASS", "FAIL", "ESTIMATE", "WARNING"]
+        },
+        "latestSummary": {
+          "type": "string"
+        },
+        "latestUtilization": {
+          "type": "number"
+        },
+        "latestInputs": {
+          "type": "object"
+        },
+        "latestAssumptions": {
+          "type": "object"
+        },
+        "latestNotes": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["userId", "projectId", "moduleId", "title", "unitSystem", "standardId", "latestRevisionNumber", "latestStatus", "latestSummary", "latestInputs", "latestAssumptions", "createdAt", "updatedAt"]
+    },
+    "CalculationRevision": {
+      "title": "CalculationRevision",
+      "description": "Immutable calculation revision snapshot for traceability and side-by-side comparison.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string"
+        },
+        "projectId": {
+          "type": "string"
+        },
+        "calcId": {
+          "type": "string"
+        },
+        "revisionNumber": {
+          "type": "integer"
+        },
+        "revisionNote": {
+          "type": "string"
+        },
+        "moduleId": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "unitSystem": {
+          "type": "string",
+          "enum": ["SI", "US"]
+        },
+        "standardId": {
+          "type": "string"
+        },
+        "standardLabel": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["PASS", "FAIL", "ESTIMATE", "WARNING"]
+        },
+        "governingCheck": {
+          "type": "string"
+        },
+        "utilizationRatio": {
+          "type": "number"
+        },
+        "inputs": {
+          "type": "object"
+        },
+        "assumptions": {
+          "type": "object"
+        },
+        "primaryOutputs": {
+          "type": "array"
+        },
+        "warnings": {
+          "type": "array"
+        },
+        "softwareVersion": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["userId", "projectId", "calcId", "revisionNumber", "moduleId", "title", "unitSystem", "standardId", "standardLabel", "status", "governingCheck", "inputs", "assumptions", "primaryOutputs", "warnings", "softwareVersion", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "Per-user engineering profile and preferences."
+    },
+    "/users/{userId}/projects/{projectId}": {
+      "schema": { "$ref": "#/entities/EngineeringProject" },
+      "description": "Engineering projects owned by the user."
+    },
+    "/users/{userId}/projects/{projectId}/calculations/{calcId}": {
+      "schema": { "$ref": "#/entities/SavedCalculation" },
+      "description": "Saved civil engineering calculations within a project."
+    },
+    "/users/{userId}/projects/{projectId}/calculations/{calcId}/revisions/{revisionId}": {
+      "schema": { "$ref": "#/entities/CalculationRevision" },
+      "description": "Immutable versioned snapshots of a calculation for auditing and comparison."
+    }
+  }
+}

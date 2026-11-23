@@ -1,0 +1,6 @@
+{
+  "name": "CivilSpec",
+  "description": "Civil engineering calculation workspace with transparent formulas, traceable inputs, design code references, versioned projects, report export, and Firebase sync.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
