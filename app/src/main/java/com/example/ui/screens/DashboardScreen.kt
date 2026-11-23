@@ -79,7 +79,10 @@ import com.example.domain.calc.StandardFamily
 import com.example.domain.calc.UnitSystem
 import com.example.ui.UiState
 import com.example.ui.components.EngineeringSafeguardNotice
-import com.example.ui.theme.NavyDeep
+import com.example.ui.theme.BatStateCrimson
+import com.example.ui.theme.BatStateCrimsonDeep
+import com.example.ui.theme.BatStateGoldBright
+import com.example.ui.theme.BatStateGoldContainer
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -106,17 +109,28 @@ fun DashboardScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    Column {
-                        Text(
-                            text = "CivilSpec Workspace",
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Image(
+                            painter = painterResource(id = R.drawable.img_app_icon_fg),
+                            contentDescription = "App logo",
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier
+                                .size(38.dp)
+                                .clip(RoundedCornerShape(10.dp))
                         )
-                        Text(
-                            text = profile?.displayName?.ifBlank { "Registered Engineer" } ?: "Engineering Projects",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column {
+                            Text(
+                                text = "CivilSpec Workspace",
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = profile?.displayName?.ifBlank { "Registered Engineer" } ?: "Engineering Projects",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     }
                 },
                 actions = {
@@ -382,7 +396,7 @@ private fun HeroDashboardCard(
                 .fillMaxSize()
                 .background(
                     Brush.horizontalGradient(
-                        listOf(NavyDeep.copy(alpha = 0.92f), NavyDeep.copy(alpha = 0.55f))
+                        listOf(BatStateCrimsonDeep.copy(alpha = 0.94f), BatStateCrimson.copy(alpha = 0.80f))
                     )
                 )
         )
@@ -404,16 +418,16 @@ private fun HeroDashboardCard(
                 Text(
                     text = "6 engineering modules • Transparent formulas • Revision control",
                     style = MaterialTheme.typography.bodySmall,
-                    color = Color(0xFFBAE6FD)
+                    color = BatStateGoldContainer
                 )
             }
             Spacer(modifier = Modifier.width(12.dp))
             OutlinedButton(
                 onClick = onCreateClick,
-                border = BorderStroke(1.dp, Color(0xFF38BDF8)),
+                border = BorderStroke(1.5.dp, BatStateGoldBright),
                 modifier = Modifier.testTag("hero_new_project_button")
             ) {
-                Text("New Project", color = Color.White)
+                Text("New Project", color = BatStateGoldBright, fontWeight = FontWeight.SemiBold)
             }
         }
     }

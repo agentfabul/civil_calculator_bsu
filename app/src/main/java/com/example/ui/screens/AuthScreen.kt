@@ -54,9 +54,12 @@ import androidx.credentials.CredentialManager
 import com.example.R
 import com.example.auth.attemptAutoSignIn
 import com.example.auth.onGoogleSignInClicked
-import com.example.ui.theme.NavyDeep
+import com.example.ui.theme.BatStateCrimson
+import com.example.ui.theme.BatStateCrimsonDeep
+import com.example.ui.theme.BatStateGoldBright
 import com.example.ui.theme.StatusFailContainer
 import com.example.ui.theme.StatusFailText
+import com.example.ui.theme.WarmPaperBackground
 
 @Composable
 fun AuthScreen(
@@ -100,43 +103,51 @@ fun AuthScreen(
                 .padding(20.dp),
             verticalArrangement = Arrangement.Center
         ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(176.dp)
-                    .clip(RoundedCornerShape(16.dp))
+            Surface(
+                color = WarmPaperBackground,
+                shape = RoundedCornerShape(16.dp),
+                border = BorderStroke(1.5.dp, BatStateCrimson.copy(alpha = 0.28f)),
+                modifier = Modifier.fillMaxWidth()
             ) {
-                Image(
-                    painter = painterResource(id = R.drawable.img_blueprint_header),
-                    contentDescription = "CivilSpec structural engineering blueprint banner",
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize()
-                )
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(
-                            Brush.verticalGradient(
-                                listOf(NavyDeep.copy(alpha = 0.25f), NavyDeep.copy(alpha = 0.88f))
+                Column {
+                    Image(
+                        painter = painterResource(id = R.drawable.img_brand_logo_banner),
+                        contentDescription = "Civil Engineering App Logo",
+                        contentScale = ContentScale.Fit,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(148.dp)
+                            .padding(horizontal = 12.dp, vertical = 8.dp)
+                    )
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(
+                                Brush.horizontalGradient(
+                                    listOf(BatStateCrimsonDeep, BatStateCrimson)
+                                )
                             )
-                        )
-                )
-                Column(
-                    modifier = Modifier
-                        .align(Alignment.BottomStart)
-                        .padding(18.dp)
-                ) {
-                    Text(
-                        text = "CIVILSPEC",
-                        style = MaterialTheme.typography.displaySmall,
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        text = "Traceable Civil Engineering Calculation Workspace",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = Color(0xFFBAE6FD)
-                    )
+                            .padding(horizontal = 16.dp, vertical = 10.dp)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                text = "Traceable Civil Engineering Workspace",
+                                style = MaterialTheme.typography.labelLarge,
+                                color = Color.White,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                            Text(
+                                text = "SI / US",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = BatStateGoldBright,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
                 }
             }
 
