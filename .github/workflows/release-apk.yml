@@ -44,6 +44,16 @@ jobs:
           fi
           touch .env
 
+      - name: Write google-services.json from secret
+        env:
+          GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+        run: |
+          if [ -z "$GOOGLE_SERVICES_JSON" ]; then
+            echo "::error::Missing repo secret GOOGLE_SERVICES_JSON. Add the full contents of app/google-services.json under Settings > Secrets and variables > Actions."
+            exit 1
+          fi
+          printf '%s' "$GOOGLE_SERVICES_JSON" > app/google-services.json
+
       - name: Run Java and Kotlin engineering unit tests
         run: gradle :app:testDebugUnitTest --tests "com.example.JavaKernelTest" --tests "com.example.CivilSpecCalcEngineTest" --tests "com.example.ExampleUnitTest"
 
